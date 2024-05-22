@@ -2,6 +2,8 @@
 --CODIGOS GENERALES ---------------------------------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(200,'Operacion Exitosa');
 INSERT INTO TAB_MENSAJES VALUES(1,'ERROR POSTGRES en la operacion . VARIABLE: FOUND de la funcion INSERT FALLIDA'); 
+INSERT INTO TAB_MENSAJES VALUES(100,'ERROR POSTGRES No se encontro ningun registro en la tabla'); 
+
 
 --CODIGO DE MENSAJES DE LA TABLA TAB_AREAS_EVALUAR  (1000,1999)--------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(1001,'ERROR INSERTAR, El nombre del area a evaluar debe tener mas de 3 caracteres y no puede ser nulo');
