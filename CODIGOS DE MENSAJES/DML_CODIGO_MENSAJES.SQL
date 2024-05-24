@@ -17,7 +17,8 @@ INSERT INTO TAB_MENSAJES VALUES(2002,'ERROR INSERTAR, La descripcion del context
 INSERT INTO TAB_MENSAJES VALUES(2003,'ERROR INSERTAR, El link de la archivo del contexto debe tener mas de 3 caracteres y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(2004,'ERROR INSERTAR, El nombre del contexto ya existe');
 INSERT INTO TAB_MENSAJES VALUES(2005,'ERROR INSERTAR, El autor del contexto debe tener mas de 3 caracteres y no puede ser nulo');
-
+INSERT INTO TAB_MENSAJES VALUES(2006,'ERROR INSERTAR, El ID_CONTEXTO TIENE QUE SER MAYOR A 0 Y NO PUEDE SER NULO');
+INSERT INTO TAB_MENSAJES VALUES(2007,'ERROR INSERTAR, El EL REGISTRO NO EXISTE EN LA TABLA CONTEXTO');
 --CODIGO DE MENSAJES DE LA TABLA TAB_DPTOS  (4000,4999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(4001,'ERROR INSERTAR, El nombre del departamento debe tener mas de 3 caracteres y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(4002,'ERROR INSERTAR, El nombre del departamento ya existe');
