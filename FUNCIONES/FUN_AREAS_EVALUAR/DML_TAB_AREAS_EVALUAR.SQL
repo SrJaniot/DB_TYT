@@ -7,3 +7,9 @@ SELECT FUN_INSERTAR_AREAS_EVALUAR('RAZONAMIENTO CUANTITATIVO TYT',' En esta area
 SELECT FUN_INSERTAR_AREAS_EVALUAR('LECTURA CRITICA TYT','En esta area se evalua español',1);
 SELECT FUN_INSERTAR_AREAS_EVALUAR('COMPETENCIAS CIUDADANAS TYT','En esta area se evaluara competencias ciudadanas',1);
 SELECT FUN_INSERTAR_AREAS_EVALUAR('INGLES TYT','En esta area se evaluara ingles',1);
+
+
+
+
+
+
