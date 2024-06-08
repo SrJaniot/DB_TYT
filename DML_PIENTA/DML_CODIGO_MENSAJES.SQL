@@ -72,6 +72,8 @@ INSERT INTO TAB_MENSAJES VALUES(9002,'ERROR INSERTAR, El ID_PREGUNTA no existe')
 INSERT INTO TAB_MENSAJES VALUES(9003,'ERROR INSERTAR, El texto de la opcion debe tener mas de 0 caracteres y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(9004,'ERROR INSERTAR, El valor de la opcion debe ser booleano y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(9005,'ERROR INSERTAR, La opcion ya existe en la pregunta');
+INSERT INTO TAB_MENSAJES VALUES(9006,'ERROR INSERTAR, El ID_OPCION NO EXISTE');
+INSERT INTO TAB_MENSAJES VALUES(9007,'ERROR CONSULTA, NO EXISTEN OPCIONES PARA LA PREGUNTA');
 
 --CODIGO DE MENSAJE DE LA TABLA TAB_SEDE (10000,10999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(10001,'ERROR INSERTAR, El nombre de la sede debe tener mas de 2 caracteres y no puede ser nulo');
