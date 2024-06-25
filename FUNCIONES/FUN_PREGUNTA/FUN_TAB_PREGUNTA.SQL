@@ -399,14 +399,15 @@ $$
         FROM TAB_PREGUNTA p
         INNER JOIN TAB_PREGUNTA_TEMAS pt ON p.ID_PREGUNTA = pt.ID_PREGUNTA
         INNER JOIN TAB_TEMAS_AREAS ta ON pt.ID_TEMA_AREA = ta.ID_TEMA_AREA
-        INNER JOIN TAB_AREAS_EVALUAR ae ON ta.ID_AREA_EVALUAR=ae.ID_AREA_EVALUAR
+        INNER JOIN TAB_AREAS_EVALUAR ae ON ta.ID_AREA_EVALUAR = ae.ID_AREA_EVALUAR
         WHERE p.ID_PREGUNTA = wID_PREGUNTA;
         --SI NO SE ENCUENTRAN REGISTROS
         IF PREGUNTA IS NULL THEN
             RETORNO := json_build_object('CODIGO', 100, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 100));
             RETURN RETORNO;
         END IF;
-        --CONSULTAR LAS OPCIONES DE RESPUESTA DE LA PREGUNTA
+
+        --CONSULTAR LAS OPCIONES DE RESPUESTA DE LA PREGUNTA CON ORDEN ALEATORIO
         SELECT INTO OPCIONES json_agg(
             json_build_object(
                 'ID_OPCION', o.ID_OPCION,
@@ -415,15 +416,16 @@ $$
                 'ES_CORRECTA', o.ES_CORRECTA,
                 'IMAGEN_OPCION', o.IMAGEN_OPCION,
                 'TIPO_OPCION_CONTENIDO', o.TIPO_OPCION
-            ) 
+            )
         )
-        FROM TAB_OPCIONES_PREGUNTA o
-        WHERE o.ID_PREGUNTA = wID_PREGUNTA;
+        FROM (SELECT * FROM TAB_OPCIONES_PREGUNTA WHERE ID_PREGUNTA = wID_PREGUNTA ORDER BY random()) o;
+        
         --SI NO SE ENCUENTRAN REGISTROS
         IF OPCIONES IS NULL THEN
             RETORNO := json_build_object('CODIGO', 100, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 100));
             RETURN RETORNO;
         END IF;
+
         --CONSULTAR EL CONTEXTO DE LA PREGUNTA
         SELECT INTO CONTEXTO json_build_object(
             'ID_CONTEXTO', c.ID_CONTEXTO,
@@ -440,12 +442,10 @@ $$
             RETORNO := json_build_object('CODIGO', 100, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 100));
             RETURN RETORNO;
         END IF;
+
         --RETORNAR LOS REGISTROS
-        RETORNO := json_build_object('CODIGO', 200, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 200), 'DATOS',json_build_object('CONTEXTO',CONTEXTO,'PREGUNTA',PREGUNTA,'OPCIONES',OPCIONES));
+        RETORNO := json_build_object('CODIGO', 200, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 200), 'DATOS', json_build_object('CONTEXTO', CONTEXTO, 'PREGUNTA', PREGUNTA, 'OPCIONES', OPCIONES));
         RETURN RETORNO;
     END;
 $$
 LANGUAGE plpgsql;
-
-
-
