@@ -11,6 +11,11 @@ SELECT FUN_VALIDAR_DATOS_AREA_ESTUDIO('Area de estudio','Descripcion de area de 
 SELECT FUN_INSERTAR_AREA_ESTUDIO('Area de estudio','Descripcion de area de estudio',1);
 SELECT FUN_INSERTAR_AREA_ESTUDIO_JSON('Area de estudio','Descripcion de area de estudio',1);
 
+SELECT FUN_OBTENER_AREAS_ESTUDIOS();
+SELECT FUN_ACTUALIZAR_AREA_ESTUDIO(1,'Area de estudio','Descripcion de area de estudio',1);
+SELECT FUN_OBTENER_AREA_ESTUDIO(1);
+SELECT FUN_ELIMINAR_AREA_ESTUDIO(1);
+
 
 
 

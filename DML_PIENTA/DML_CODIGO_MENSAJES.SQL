@@ -84,6 +84,7 @@ INSERT INTO TAB_MENSAJES VALUES(10005,'ERROR INSERTAR, El email de la sede debe 
 INSERT INTO TAB_MENSAJES VALUES(10006,'ERROR INSERTAR, El ID_INSTITUCION debe ser mayor a 0 y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(10007,'ERROR INSERTAR, El nombre de la sede ya existe');
 INSERT INTO TAB_MENSAJES VALUES(10008,'ERROR INSERTAR, El ID_INSTITUCION no existe en la tabla institucion');
+INSERT INTO TAB_MENSAJES VALUES(10009,'ERROR INSERTAR, El ID_SEDE no existe');
 
 --CODIGO DE MENSAJE DE LA TABLA TAB_AREA_ESTUDIO (11000,11999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(11001,'ERROR INSERTAR, El nombre del area de estudio debe tener mas de 3 caracteres y no puede ser nulo');
@@ -91,6 +92,7 @@ INSERT INTO TAB_MENSAJES VALUES(11002,'ERROR INSERTAR, La descripcion del area d
 INSERT INTO TAB_MENSAJES VALUES(11003,'ERROR INSERTAR, El ID_SEDE debe ser mayor a 0 y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(11004,'ERROR INSERTAR, El ID_SEDE no existe');
 INSERT INTO TAB_MENSAJES VALUES(11005,'ERROR INSERTAR, El area de estudio ya existe');
+INSERT INTO TAB_MENSAJES VALUES(11000,'ERROR UPDATE, El ID_AREA_ESTUDIO no existe');
 
 --CODIGO DE MENSAJE DE LA TABLA TAB_PROGRAMAS_ESTUDIO (12000,12999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(12001,'ERROR INSERTAR, El nombre del programa de estudio debe tener mas de 3 caracteres y no puede ser nulo');

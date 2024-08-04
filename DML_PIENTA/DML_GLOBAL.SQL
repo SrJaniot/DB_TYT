@@ -1257,5 +1257,10 @@ SELECT FUN_INSERTAR_TEMAS_AREAS(4,'WH questions','Estos temas hacen parte del gr
 SELECT FUN_INSERTAR_TEMAS_AREAS(4,'Textos Literarios','Estos temas hacen parte del grupo de ingles en PARTE 6.');
     --PARTE 7
 SELECT FUN_INSERTAR_TEMAS_AREAS(4,'Textos cientificos','Estos temas hacen parte del grupo de ingles en PARTE 7.');
+
+-- INSERT DE INSTITUCIONES EDUCATIVAS------------------------------------------------------------------------------------------------------------------------------------
+SELECT FUN_INSERTAR_INSTITUCION('SENA','DIRECCION INSTITUCION 1','REPRESENTANTE INSTITUCION 1','3152901731','000000@00000.000','11001');
+
+
     
 
