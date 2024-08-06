@@ -101,6 +101,7 @@ INSERT INTO TAB_MENSAJES VALUES(12003,'ERROR INSERTAR, El tipo de formacion del 
 INSERT INTO TAB_MENSAJES VALUES(12004,'ERROR INSERTAR, El ID_AREA_ESTUDIO debe ser mayor a 0 y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(12005,'ERROR INSERTAR, El ID_AREA_ESTUDIO no existe');
 INSERT INTO TAB_MENSAJES VALUES(12006,'ERROR INSERTAR, El programa de estudio ya existe');
+INSERT INTO TAB_MENSAJES VALUES(12000,'ERROR UPDATE, El ID_PROGRAMA_ESTUDIO no existe');
 
 --CODIGO DE MENSAJE DE LA TABLA TAB_GRUPO_ESTUDIO (13000,13999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(13001,'ERROR INSERTAR, El nombre del grupo de estudio debe tener mas de 3 caracteres y no puede ser nulo');
