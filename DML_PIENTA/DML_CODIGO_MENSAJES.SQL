@@ -33,6 +33,7 @@ INSERT INTO TAB_MENSAJES VALUES(4002,'ERROR INSERTAR, El nombre del departamento
 INSERT INTO TAB_MENSAJES VALUES(5001,'ERROR INSERTAR, El nombre de la prueba debe tener mas de 3 caracteres y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(5002,'ERROR INSERTAR, La descripcion de la prueba debe tener mas de 3 caracteres y no puede ser nulo');
 INSERT INTO TAB_MENSAJES VALUES(5003,'ERROR INSERTAR, nombre de la prueba ya existe');
+INSERT INTO TAB_MENSAJES VALUES(5010,'ERROR INSERTAR, LA FECHA FIN NO PUEDE SER MENOR A LA FECHA INICIO');
 
 --CODIGO DE MENSAJES DE LA TABLA TAB_INSTITUCION  (6000,6999)-------------------------------------------------------------------------------------------
 INSERT INTO TAB_MENSAJES VALUES(6001,'ERROR INSERTAR, El nombre de la institucion debe tener mas de 3 caracteres y no puede ser nulo');
