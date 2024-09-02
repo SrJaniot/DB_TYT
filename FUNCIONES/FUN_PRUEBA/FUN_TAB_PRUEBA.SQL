@@ -776,3 +776,26 @@ $$
     END;
 $$
 LANGUAGE plpgsql;
+
+
+--FUNCION QUE ME RETORNA EN UN JSON TODOS LOS ID DE LAS PREGUNTAS DE UNA PRUEBA
+CREATE OR REPLACE FUNCTION FUN_OBTENER_ID_PREGUNTAS_PRUEBA_JSON(wID_PRUEBA TAB_PRUEBA.ID_PRUEBA%TYPE) RETURNS JSON AS
+$$
+    DECLARE
+        RETORNO JSON;
+        DATOS JSON;
+    BEGIN
+        --OBTENER TODOS LOS ID DE LAS PREGUNTAS DE UNA PRUEBA
+        DATOS := (SELECT json_agg(json_build_object('ID_PREGUNTA', ID_PREGUNTA))
+        FROM TAB_PRUEBA_PREGUNTAS WHERE ID_PRUEBA = wID_PRUEBA);
+        --VALIDAR SI SE OBTUVIERON DATOS
+        IF DATOS IS NULL THEN
+            RETORNO := json_build_object('CODIGO', 1, 'MENSAJE', 'No se encontraron preguntas en la prueba');
+            RETURN RETORNO;
+        ELSE
+            RETORNO := json_build_object('CODIGO', 200, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 200), 'DATOS', DATOS);
+            RETURN RETORNO;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
