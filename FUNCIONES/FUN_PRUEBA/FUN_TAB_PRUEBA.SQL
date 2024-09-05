@@ -176,7 +176,7 @@ DECLARE
     wVALIDAR INTEGER;
     ULTIMOID INTEGER;
     wID_PREGUNTA_RANDOM INTEGER;
-    wCANTIDAD_PREGUNTAS_INSERTADAS INTEGER;
+    wCANTIDAD_PREGUNTAS_INSERTADAS INTEGER; -- Declaración de la variable
     wCANTIDAD_PREGUNTAS_TOTAL_AREA INTEGER;
     wNUMERO_PREGUNTAS INTEGER := 100;
     i INTEGER;
@@ -212,11 +212,11 @@ BEGIN
                         RETORNO := json_build_object('CODIGO', 1, 'MENSAJE', 'No hay suficientes preguntas disponibles en el área evaluada', 'AREA', i);
                         RETURN RETORNO;
                     END IF; 
-                END LOOP;
 
-                -- INSERTAR LAS PREGUNTAS DE FORMA RANDOM
-                wCANTIDAD_PREGUNTAS_INSERTADAS := 0;
-                FOR i IN 1..4 LOOP
+                    -- REINICIAR EL CONTADOR DE PREGUNTAS INSERTADAS PARA CADA ÁREA
+                    wCANTIDAD_PREGUNTAS_INSERTADAS := 0;
+
+                    -- INSERTAR LAS PREGUNTAS DE FORMA RANDOM
                     WHILE wCANTIDAD_PREGUNTAS_INSERTADAS < wNUMERO_PREGUNTAS / 4 LOOP
                         -- OBTENER UNA PREGUNTA RANDOM QUE AÚN NO HAYA SIDO INSERTADA
                         SELECT INTO wID_PREGUNTA_RANDOM P.ID_PREGUNTA
