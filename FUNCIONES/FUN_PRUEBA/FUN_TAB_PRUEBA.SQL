@@ -1246,6 +1246,8 @@ $$
         PROMEDIO_PRUEBA_GRUPO DECIMAL (10,2);
         PROMEDIO_PRUEBA_CARRERA DECIMAL (10,2);
         PROMEDIO_PRUEBA_TOTAL DECIMAL (10,2);
+        NOMBRE_ESTUDIANTE VARCHAR;
+        NUM_DOC_ESTUDIANTE VARCHAR;
 
         NUMERO_PREGUNTAS INTEGER;
     BEGIN
@@ -1396,6 +1398,13 @@ $$
             SELECT AVG(PUNTUACION_PRUEBA_ESTUDIANTE) INTO PROMEDIO_PRUEBA_TOTAL
             FROM TAB_PRUEBA_ESTUDIANTE
             WHERE ID_PRUEBA = wID_PRUEBA;
+
+            --TRAER EL NOMBRE Y EL NUMERO DE DOCUMENTO DEL ESTUDIANTE
+            SELECT NOM_ESTUDIANTE, ID_ESTUDIANTE INTO NOMBRE_ESTUDIANTE, NUM_DOC_ESTUDIANTE
+            FROM TAB_ESTUDIANTE
+            WHERE ID_ESTUDIANTE = wID_ESTUDIANTE;
+            
+
   
             
             --IMPRIMIR LOS RESULTADOS   
@@ -1429,7 +1438,9 @@ $$
                 'PROMEDIO_PRUEBA_ESTUDIANTE', PROMEDIO_PRUEBA_ESTUDIANTE,
                 'PROMEDIO_PRUEBA_GRUPO', PROMEDIO_PRUEBA_GRUPO,
                 'PROMEDIO_PRUEBA_CARRERA', PROMEDIO_PRUEBA_CARRERA,
-                'PROMEDIO_PRUEBA_TOTAL', PROMEDIO_PRUEBA_TOTAL
+                'PROMEDIO_PRUEBA_TOTAL', PROMEDIO_PRUEBA_TOTAL,
+                'NOMBRE_ESTUDIANTE', NOMBRE_ESTUDIANTE,
+                'NUM_DOC_ESTUDIANTE', NUM_DOC_ESTUDIANTE
             );
             -- RETORNAR EL RESULTADO
             RETORNO := json_build_object
@@ -1443,3 +1454,280 @@ $$
     END;
 $$
 LANGUAGE plpgsql;
+
+--FUNCION QUE ME OBTIENE TODAS LAS PRUEBAS QUE YA FINALIZARON Y RETORNA UN JSON CON LOS DATOS DE LA PRUEBA
+CREATE OR REPLACE FUNCTION FUN_OBTENER_PRUEBAS_FINALIZADAS_JSON() RETURNS JSON AS
+$$
+    DECLARE
+        RETORNO JSON;
+        DATOS JSON;
+    BEGIN
+        --OBTENER LAS PRUEBAS QUE YA FINALIZARON
+        SET TIME ZONE 'America/Bogota';
+        DATOS := (SELECT json_agg(json_build_object('ID_PRUEBA', ID_PRUEBA, 'NOM_PRUEBA', NOM_PRUEBA, 'DESCRIPCION_PRUEBA', DESCRIPCION_PRUEBA, 'TIPO_PRUEBA', TIPO_PRUEBA, 'FECHA_PRUEBA_INICIO', FECHA_PRUEBA_INICIO, 'FECHA_PRUEBA_FIN', FECHA_PRUEBA_FIN, 'DURACION_PRUEBA_MINUTOS', DURACION_PRUEBA_MINUTOS, 'NUMERO_PREGUNTAS', NUMERO_PREGUNTAS))
+        FROM TAB_PRUEBA 
+        WHERE EXISTS (SELECT 1 FROM TAB_PRUEBA_ESTUDIANTE WHERE ID_PRUEBA = TAB_PRUEBA.ID_PRUEBA AND FECHA_PRUEBA_FIN_ESTUDIANTE IS NOT NULL));
+
+        --VALIDAR SI SE OBTUVIERON DATOS
+        IF DATOS IS NULL THEN
+            RETORNO := json_build_object('CODIGO', 1, 'MENSAJE', 'No se encontraron pruebas finalizadas');
+            RETURN RETORNO;
+        ELSE
+            --RETORNAR EL RESULTADO
+            RETORNO := json_build_object('CODIGO', 200, 'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 200), 'DATOS', DATOS);
+            RETURN RETORNO;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+--FUNCION QUE ME TRAE LOS ANALISIS DE UNA PRUEBA FINALIZADA USANDO EL ID_PRUEBA
+CREATE OR REPLACE FUNCTION FUN_OBTENER_ANALISIS_PRUEBA_FINALIZADA_JSON(
+    wID_PRUEBA TAB_PRUEBA.ID_PRUEBA%TYPE
+) RETURNS JSON AS
+$$
+    DECLARE
+        RETORNO JSON;
+        DATOS JSON;
+        PROMEDIO_TOTAL DECIMAL (10,2);
+        NUMERO_ESTUDIANTES INTEGER;
+        PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES DECIMAL (10,2);
+        DATOS_FINAL JSON;
+        PROMEDIO_PRUEBA_CARRERA JSON;
+        PROMEDIO_PRUEBA_GRUPO JSON;
+        PORCENTAJE_ASIERTO_AREAS_EVALUADAS JSON;
+        ESTUDIANTE_DESTACADO JSON;
+        ESTUDIANTE_IRRELERVANTE JSON;
+
+
+    BEGIN
+        --OBTENER LOS ANALISIS DE LA PRUEBA FINALIZADA
+        DATOS := (SELECT json_build_object('ID_PRUEBA', P.ID_PRUEBA, 'NOM_PRUEBA', P.NOM_PRUEBA, 'DURACION_PRUEBA_MINUTOS', P.DURACION_PRUEBA_MINUTOS, 'NUMERO_PREGUNTAS', P.NUMERO_PREGUNTAS, 'FECHA_PRUEBA_INICIO', P.FECHA_PRUEBA_INICIO, 'FECHA_PRUEBA_FIN', P.FECHA_PRUEBA_FIN)
+        FROM TAB_PRUEBA P
+        WHERE P.ID_PRUEBA = wID_PRUEBA);
+        --VALIDAR SI SE OBTUVIERON DATOS
+        IF DATOS IS NULL THEN
+            RETORNO := json_build_object('CODIGO', 1, 'MENSAJE', 'No se encontraron pruebas finalizadas');
+            RETURN RETORNO;
+        ELSE
+            --CALCULAR EL PROMEDIO TOTAL DE LA PRUEBA
+            SELECT AVG(PUNTUACION_PRUEBA_ESTUDIANTE) INTO PROMEDIO_TOTAL
+            FROM TAB_PRUEBA_ESTUDIANTE
+            WHERE ID_PRUEBA = wID_PRUEBA;
+
+
+            --CALCULAR EL NUMERO DE ESTUDIANTES QUE REALIZARON LA PRUEBA
+            SELECT COUNT(*) INTO NUMERO_ESTUDIANTES
+            FROM TAB_PRUEBA_ESTUDIANTE
+            WHERE ID_PRUEBA = wID_PRUEBA;
+            --CALCULAR EL PROMEDIO DEL TIEMPO IMPLEMENTADO POR LOS ESTUDIANTES
+            SELECT AVG(EXTRACT(EPOCH FROM (FECHA_PRUEBA_FIN_ESTUDIANTE - FECHA_PRUEBA_INICIO_ESTUDIANTE)) / 60) INTO PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES
+            FROM TAB_PRUEBA_ESTUDIANTE
+            WHERE ID_PRUEBA = wID_PRUEBA;
+
+
+            --OBTENER LAS DIFERENTES CARRERAS QUE REALIZARON LA PRUEBA Y DAR EL PROMEDIO DE LA PRUEBA POR CARRERA
+            --TENER EN CUENTA QUE LA CARRERA ES TAB_PROGRAMA_ESTUDIO Y ESE ES UNA LLAVE FORANEA DE LA TABLA TAB_GRUPO_ESTUDIO QUE A SU VEZ ES UNA LLAVE FORANEA DE LA TABLA TAB_ESTUDIANTE
+            PROMEDIO_PRUEBA_CARRERA := (
+                SELECT json_agg(
+                    json_build_object(
+                        'NOMBRE_CARRERA', PE.NOM_PROGRAMA_ESTUDIO,
+                        'PROMEDIO_PRUEBA_CARRERA', (
+                            SELECT AVG(PUNTUACION_PRUEBA_ESTUDIANTE)
+                            FROM TAB_PRUEBA_ESTUDIANTE
+                            JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = TAB_PRUEBA_ESTUDIANTE.ID_ESTUDIANTE
+                            JOIN TAB_GRUPO_ESTUDIO G ON E.ID_GRUPO_ESTUDIO = G.ID_GRUPO_ESTUDIO
+                            WHERE TAB_PRUEBA_ESTUDIANTE.ID_PRUEBA = wID_PRUEBA
+                            AND G.ID_PROGRAMA_ESTUDIO = PE.ID_PROGRAMA_ESTUDIO
+                        )
+                    )
+                )
+                FROM TAB_PROGRAMA_ESTUDIO PE
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM TAB_PRUEBA_ESTUDIANTE
+                    JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = TAB_PRUEBA_ESTUDIANTE.ID_ESTUDIANTE
+                    JOIN TAB_GRUPO_ESTUDIO G ON E.ID_GRUPO_ESTUDIO = G.ID_GRUPO_ESTUDIO
+                    WHERE TAB_PRUEBA_ESTUDIANTE.ID_PRUEBA = wID_PRUEBA
+                    AND G.ID_PROGRAMA_ESTUDIO = PE.ID_PROGRAMA_ESTUDIO
+                )
+            );
+            --OBTENER LOS DIFERENTES GRUPOS QUE REALIZARON LA PRUEBA Y DAR EL PROMEDIO DE LA PRUEBA POR GRUPO
+            PROMEDIO_PRUEBA_GRUPO := (
+                SELECT json_agg(
+                    json_build_object(
+                        'NOMBRE_GRUPO', G.NOM_GRUPO_ESTUDIO,
+                        'PROMEDIO_PRUEBA_GRUPO', (
+                            SELECT AVG(PUNTUACION_PRUEBA_ESTUDIANTE)
+                            FROM TAB_PRUEBA_ESTUDIANTE PE
+                            JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = PE.ID_ESTUDIANTE
+                            WHERE PE.ID_PRUEBA = wID_PRUEBA
+                            AND E.ID_GRUPO_ESTUDIO = G.ID_GRUPO_ESTUDIO
+                        )
+                    )
+                )
+                FROM TAB_GRUPO_ESTUDIO G
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM TAB_PRUEBA_ESTUDIANTE PE
+                    JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = PE.ID_ESTUDIANTE
+                    WHERE PE.ID_PRUEBA = wID_PRUEBA
+                    AND E.ID_GRUPO_ESTUDIO = G.ID_GRUPO_ESTUDIO
+                )
+            );
+
+
+
+            --OBTENER EL PORCENTAJE DE ACIERTO DE LAS AREAS EVALUADAS EN LA PRUEBA
+            PORCENTAJE_ASIERTO_AREAS_EVALUADAS := (
+                SELECT json_agg(
+                    json_build_object(
+                        'NOMBRE_AREA', AE.NOM_AREA_EVALUAR,
+                        'PORCENTAJE_ACIERTO', (
+                            SELECT CASE 
+                                WHEN (
+                                    SELECT COUNT(*) 
+                                    FROM TAB_PRUEBA_RESPUESTAS_ESTUDIANTE PRE
+                                    JOIN TAB_OPCIONES_PREGUNTA OP ON PRE.ID_RESPUESTA_ESTUDIANTE = OP.ID_OPCION
+                                    JOIN TAB_PREGUNTA P ON PRE.ID_PREGUNTA = P.ID_PREGUNTA
+                                    JOIN TAB_PREGUNTA_TEMAS PT ON P.ID_PREGUNTA = PT.ID_PREGUNTA
+                                    JOIN TAB_TEMAS_AREAS TA ON PT.ID_TEMA_AREA = TA.ID_TEMA_AREA
+                                    WHERE PRE.ID_PRUEBA = wID_PRUEBA
+                                    AND OP.ES_CORRECTA = TRUE
+                                    AND TA.ID_AREA_EVALUAR = AE.ID_AREA_EVALUAR
+                                ) = 0 THEN 0
+                                ELSE (
+                                    (
+                                        SELECT COUNT(*) 
+                                        FROM TAB_PRUEBA_RESPUESTAS_ESTUDIANTE PRE
+                                        JOIN TAB_OPCIONES_PREGUNTA OP ON PRE.ID_RESPUESTA_ESTUDIANTE = OP.ID_OPCION
+                                        JOIN TAB_PREGUNTA P ON PRE.ID_PREGUNTA = P.ID_PREGUNTA
+                                        JOIN TAB_PREGUNTA_TEMAS PT ON P.ID_PREGUNTA = PT.ID_PREGUNTA
+                                        JOIN TAB_TEMAS_AREAS TA ON PT.ID_TEMA_AREA = TA.ID_TEMA_AREA
+                                        WHERE PRE.ID_PRUEBA = wID_PRUEBA
+                                        AND OP.ES_CORRECTA = TRUE
+                                        AND TA.ID_AREA_EVALUAR = AE.ID_AREA_EVALUAR
+                                    )::FLOAT / (
+                                        SELECT COUNT(*) 
+                                        FROM TAB_PRUEBA_RESPUESTAS_ESTUDIANTE PRE
+                                        JOIN TAB_OPCIONES_PREGUNTA OP ON PRE.ID_RESPUESTA_ESTUDIANTE = OP.ID_OPCION
+                                        JOIN TAB_PREGUNTA P ON PRE.ID_PREGUNTA = P.ID_PREGUNTA
+                                        JOIN TAB_PREGUNTA_TEMAS PT ON P.ID_PREGUNTA = PT.ID_PREGUNTA
+                                        JOIN TAB_TEMAS_AREAS TA ON PT.ID_TEMA_AREA = TA.ID_TEMA_AREA
+                                        WHERE PRE.ID_PRUEBA = wID_PRUEBA
+                                        AND TA.ID_AREA_EVALUAR = AE.ID_AREA_EVALUAR
+                                    ) * 100
+                                )
+                            END
+                        )
+                    )
+                )
+                FROM TAB_AREAS_EVALUAR AE
+                WHERE AE.ID_AREA_EVALUAR IN (
+                    SELECT DISTINCT TA.ID_AREA_EVALUAR
+                    FROM TAB_PRUEBA_RESPUESTAS_ESTUDIANTE PRE
+                    JOIN TAB_PREGUNTA P ON PRE.ID_PREGUNTA = P.ID_PREGUNTA
+                    JOIN TAB_PREGUNTA_TEMAS PT ON P.ID_PREGUNTA = PT.ID_PREGUNTA
+                    JOIN TAB_TEMAS_AREAS TA ON PT.ID_TEMA_AREA = TA.ID_TEMA_AREA
+                    WHERE PRE.ID_PRUEBA = wID_PRUEBA
+                )
+            );
+
+
+
+
+
+            --OBTENER EL ESTUDIANTE DESTACADO DE LA PRUEBA
+            ESTUDIANTE_DESTACADO := (
+                SELECT json_build_object(
+                    'NOMBRE_ESTUDIANTE', E.NOM_ESTUDIANTE,
+                    'NUM_DOC_ESTUDIANTE', E.ID_ESTUDIANTE,
+                    'PUNTUACION_PRUEBA_ESTUDIANTE', PE.PUNTUACION_PRUEBA_ESTUDIANTE
+                )
+                FROM TAB_PRUEBA_ESTUDIANTE PE
+                JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = PE.ID_ESTUDIANTE
+                WHERE PE.ID_PRUEBA = wID_PRUEBA
+                ORDER BY PE.PUNTUACION_PRUEBA_ESTUDIANTE DESC
+                LIMIT 1
+            );
+
+            --OBTENER EL ESTUDIANTE IRRELEVANTE DE LA PRUEBA
+            ESTUDIANTE_IRRELERVANTE := (
+                SELECT json_build_object(
+                    'NOMBRE_ESTUDIANTE', E.NOM_ESTUDIANTE,
+                    'NUM_DOC_ESTUDIANTE', E.ID_ESTUDIANTE,
+                    'PUNTUACION_PRUEBA_ESTUDIANTE', PE.PUNTUACION_PRUEBA_ESTUDIANTE
+                )
+                FROM TAB_PRUEBA_ESTUDIANTE PE
+                JOIN TAB_ESTUDIANTE E ON E.ID_ESTUDIANTE = PE.ID_ESTUDIANTE
+                WHERE PE.ID_PRUEBA = wID_PRUEBA
+                ORDER BY PE.PUNTUACION_PRUEBA_ESTUDIANTE ASC
+                LIMIT 1
+            );
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+            --IMPRIMIR LOS RESULTADOS
+            RAISE NOTICE 'PROMEDIO_TOTAL: %', PROMEDIO_TOTAL;
+            RAISE NOTICE 'NUMERO_ESTUDIANTES: %', NUMERO_ESTUDIANTES;
+            RAISE NOTICE 'PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES: %', PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES;
+            RAISE NOTICE 'PROMEDIO_PRUEBA_CARRERA: %', PROMEDIO_PRUEBA_CARRERA;
+            RAISE NOTICE 'PROMEDIO_PRUEBA_GRUPO: %', PROMEDIO_PRUEBA_GRUPO;
+            RAISE NOTICE 'PORCENTAJE_ASIERTO_AREAS_EVALUADAS: %', PORCENTAJE_ASIERTO_AREAS_EVALUADAS;
+            RAISE NOTICE 'ESTUDIANTE_DESTACADO: %', ESTUDIANTE_DESTACADO;
+            RAISE NOTICE 'ESTUDIANTE_IRRELEVANTE: %', ESTUDIANTE_IRRELERVANTE;
+           
+           
+           
+           
+           
+           
+           
+           
+           
+           
+            --RETORNAR EL RESULTADO
+            DATOS_FINAL := json_build_object
+            (
+                'DATOS_PRUEBA', DATOS,
+                'PROMEDIO_TOTAL', PROMEDIO_TOTAL,
+                'NUMERO_ESTUDIANTES', NUMERO_ESTUDIANTES,
+                'PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES', PROMEDIO_TIEMPO_IMPLEMENTADO_ESTUDIANTES,
+                'PROMEDIO_PRUEBA_CARRERA', PROMEDIO_PRUEBA_CARRERA,
+                'PROMEDIO_PRUEBA_GRUPO', PROMEDIO_PRUEBA_GRUPO,
+                'PORCENTAJE_ASIERTO_AREAS_EVALUADAS', PORCENTAJE_ASIERTO_AREAS_EVALUADAS,
+                'ESTUDIANTE_DESTACADO', ESTUDIANTE_DESTACADO,
+                'ESTUDIANTE_IRRELEVANTE', ESTUDIANTE_IRRELERVANTE
+            );
+            RETORNO := json_build_object
+            (
+                'CODIGO', 200,
+                'MENSAJE', (SELECT desc_mensaje FROM TAB_MENSAJES WHERE id_mensaje = 200),
+                'DATOS', DATOS_FINAL
+            );
+            RETURN RETORNO;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+            
+                
+
+
+        
+
+
+
